@@ -20,6 +20,7 @@ import {
   Copy,
   Wand2,
   Check,
+  Users2,
 } from "lucide-react";
 
 const ATTRS = [
@@ -36,6 +37,7 @@ export default function Roles({ notify }: { notify: Notify }) {
   const [showCreate, setShowCreate] = useState(false);
   const [dropTarget, setDropTarget] = useState<RoleInfo | null>(null);
   const [pwTarget, setPwTarget] = useState<RoleInfo | null>(null);
+  const [memberTarget, setMemberTarget] = useState<RoleInfo | null>(null);
 
   async function load() {
     setLoading(true);
@@ -145,6 +147,14 @@ export default function Roles({ notify }: { notify: Notify }) {
                     <Button
                       variant="ghost"
                       size="icon"
+                      title="Manage group membership"
+                      onClick={() => setMemberTarget(role)}
+                    >
+                      <Users2 size={15} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       title="Set / rotate password"
                       onClick={() => setPwTarget(role)}
                     >
@@ -223,6 +233,16 @@ export default function Roles({ notify }: { notify: Notify }) {
           role={pwTarget}
           notify={notify}
           onClose={() => setPwTarget(null)}
+        />
+      )}
+
+      {memberTarget && (
+        <MembershipModal
+          role={memberTarget}
+          allRoles={visible}
+          notify={notify}
+          onClose={() => setMemberTarget(null)}
+          onChanged={load}
         />
       )}
 
@@ -477,6 +497,85 @@ function PasswordModal({
           </div>
         </div>
       )}
+    </Modal>
+  );
+}
+
+/* ---------------- Group membership modal ---------------- */
+
+function MembershipModal({
+  role,
+  allRoles,
+  notify,
+  onClose,
+  onChanged,
+}: {
+  role: RoleInfo;
+  allRoles: RoleInfo[];
+  notify: Notify;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const [memberOf, setMemberOf] = useState<string[]>(role.memberOf);
+
+  // Candidate groups are any other role this one isn't itself.
+  const groups = allRoles.filter((r) => r.name !== role.name);
+
+  async function setMembership(group: string, grant: boolean) {
+    const res = await fetch("/api/membership", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: role.name, group, grant }),
+    });
+    const data = await res.json();
+    if (!res.ok) return notify(data.error || "Failed to update membership", "error");
+    setMemberOf((m) =>
+      grant ? [...m, group] : m.filter((g) => g !== group)
+    );
+    notify(
+      `${grant ? "Added" : "Removed"} ${role.name} ${
+        grant ? "to" : "from"
+      } ${group}`,
+      "success"
+    );
+    onChanged();
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`Group membership — ${role.name}`}
+      footer={
+        <Button variant="primary" onClick={onClose}>
+          Done
+        </Button>
+      }
+    >
+      <p className="mb-3 text-xs text-muted">
+        Toggle which roles <span className="font-mono">{role.name}</span> is a
+        member of. Membership inherits the group&apos;s privileges.
+      </p>
+      <div className="max-h-80 space-y-1 overflow-y-auto">
+        {groups.map((g) => {
+          const isMember = memberOf.includes(g.name);
+          return (
+            <div
+              key={g.name}
+              className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-surface-2"
+            >
+              <span className="font-mono text-sm">{g.name}</span>
+              <Toggle
+                checked={isMember}
+                onChange={(v) => setMembership(g.name, v)}
+              />
+            </div>
+          );
+        })}
+        {groups.length === 0 && (
+          <p className="text-sm text-muted">No other roles available.</p>
+        )}
+      </div>
     </Modal>
   );
 }

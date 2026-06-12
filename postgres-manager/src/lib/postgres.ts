@@ -26,9 +26,30 @@ function connectionConfig() {
   };
 }
 
-// Singleton pool for the maintenance database. Cached on globalThis so it
-// survives Next.js hot-reloads in development.
-const globalForPg = globalThis as unknown as { __pgPool?: Pool };
+/**
+ * Resolved connection details (host/port/user/password/database) regardless of
+ * whether the config came from DATABASE_URL or the individual PG* variables.
+ * Used to build the environment for pg_dump / pg_restore / psql subprocesses.
+ */
+export function resolveConnection() {
+  if (process.env.DATABASE_URL) {
+    const u = new URL(process.env.DATABASE_URL);
+    return {
+      host: u.hostname || "localhost",
+      port: u.port ? parseInt(u.port, 10) : 5432,
+      user: decodeURIComponent(u.username) || "postgres",
+      password: decodeURIComponent(u.password) || "",
+      database: u.pathname.replace(/^\//, "") || "postgres",
+    };
+  }
+  return {
+    host: process.env.PGHOST || "localhost",
+    port: parseInt(process.env.PGPORT || "5432", 10),
+    user: process.env.PGUSER || "postgres",
+    password: process.env.PGPASSWORD ?? "",
+    database: process.env.PGDATABASE || "postgres",
+  };
+}
 
 function getPool(): Pool {
   if (!globalForPg.__pgPool) {
@@ -41,6 +62,10 @@ function getPool(): Pool {
   }
   return globalForPg.__pgPool;
 }
+
+// Singleton pool for the maintenance database. Cached on globalThis so it
+// survives Next.js hot-reloads in development.
+const globalForPg = globalThis as unknown as { __pgPool?: Pool };
 
 /* ------------------------------------------------------------------ *
  * Identifier / literal escaping

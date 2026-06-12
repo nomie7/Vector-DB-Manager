@@ -7,24 +7,41 @@ import {
   Users,
   ShieldCheck,
   Terminal,
+  Table2,
+  Activity,
+  Save,
   CircleDot,
   X,
 } from "lucide-react";
 import Overview from "@/components/Overview";
 import Databases from "@/components/Databases";
 import Roles from "@/components/Roles";
-import Privileges from "@/components/Privileges";
+import Permissions from "@/components/Permissions";
+import Tables from "@/components/Tables";
+import Sessions from "@/components/Sessions";
+import Backup from "@/components/Backup";
 import SqlConsole from "@/components/SqlConsole";
 import { cn } from "@/lib/utils";
 import { StatusInfo, Notify } from "@/lib/types";
 
-type TabId = "overview" | "databases" | "roles" | "privileges" | "sql";
+type TabId =
+  | "overview"
+  | "databases"
+  | "roles"
+  | "permissions"
+  | "tables"
+  | "sessions"
+  | "backup"
+  | "sql";
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "overview", label: "Overview", icon: <LayoutDashboard size={16} /> },
   { id: "databases", label: "Databases", icon: <Database size={16} /> },
   { id: "roles", label: "Roles & Users", icon: <Users size={16} /> },
-  { id: "privileges", label: "Privileges", icon: <ShieldCheck size={16} /> },
+  { id: "permissions", label: "Permissions", icon: <ShieldCheck size={16} /> },
+  { id: "tables", label: "Tables", icon: <Table2 size={16} /> },
+  { id: "sessions", label: "Sessions", icon: <Activity size={16} /> },
+  { id: "backup", label: "Backup", icon: <Save size={16} /> },
   { id: "sql", label: "SQL Console", icon: <Terminal size={16} /> },
 ];
 
@@ -103,7 +120,10 @@ export default function Home() {
         {tab === "overview" && <Overview status={status} />}
         {tab === "databases" && <Databases notify={notify} />}
         {tab === "roles" && <Roles notify={notify} />}
-        {tab === "privileges" && <Privileges notify={notify} />}
+        {tab === "permissions" && <Permissions notify={notify} />}
+        {tab === "tables" && <Tables notify={notify} />}
+        {tab === "sessions" && <Sessions notify={notify} />}
+        {tab === "backup" && <Backup notify={notify} />}
         {tab === "sql" && <SqlConsole notify={notify} />}
       </main>
 

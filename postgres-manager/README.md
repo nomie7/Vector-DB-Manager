@@ -18,11 +18,27 @@ rotate passwords, and run ad-hoc SQL. Built with Next.js, TypeScript and
   `FORCE` to terminate active sessions on PostgreSQL 13+).
 - **Roles & Users** — list roles with their attributes and group memberships;
   create roles with login/superuser/createdb/createrole/replication options;
-  toggle attributes inline; drop roles.
+  toggle attributes inline; manage **group membership**; drop roles.
 - **Passwords** — set or **rotate** a role's password, generate a strong random
   password server-side (shown once to copy), and optionally set an expiry date.
-- **Privileges** — grant/revoke `CONNECT`, `CREATE` and `TEMPORARY` privileges
-  per database and role with a toggle grid.
+- **Permissions** — grant/revoke privileges at every level with toggle grids:
+  - _Database_: `CONNECT`, `CREATE`, `TEMPORARY`
+  - _Schema_: `USAGE`, `CREATE`, plus a bulk "grant ALL on all tables &
+    sequences" action (optionally including future objects via default
+    privileges)
+  - _Table_: `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`,
+    `TRIGGER`
+  - _Extensions_: install (`CREATE EXTENSION`) and drop available extensions
+- **Tables & data browser** — browse schemas and tables/views with columns,
+  indexes, size and row estimates; page through and sort table data; insert,
+  edit and delete rows (for tables with a primary key); export the current page
+  to CSV; truncate or drop objects.
+- **Sessions** — live `pg_stat_activity` view (user, database, state, wait
+  event, query, duration) with auto-refresh and the ability to **cancel a
+  running query** or **terminate a backend**.
+- **Backup & restore** — download a `pg_dump` of any database (plain SQL or
+  custom/compressed format) and restore an uploaded dump via `psql` /
+  `pg_restore` (format auto-detected).
 - **SQL Console** — run arbitrary SQL against any database and view tabular
   results (⌘/Ctrl+Enter to execute).
 
@@ -31,6 +47,8 @@ rotate passwords, and run ad-hoc SQL. Built with Next.js, TypeScript and
 - Node.js 18+
 - A reachable PostgreSQL server and a role with enough privileges (a superuser,
   or at least `CREATEDB`/`CREATEROLE`) to perform the operations you need.
+- For the Backup & restore tab, the PostgreSQL client binaries (`pg_dump`,
+  `pg_restore`, `psql`) must be on the `PATH` of the machine running this app.
 
 ## Setup
 
